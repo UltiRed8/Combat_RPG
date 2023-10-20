@@ -6,14 +6,14 @@ using namespace std;
 void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes);
 void Display(string _text);
 void DisplayValue(string _text, int _value);
-void GameLoop(string* _weapons, string* _enemies);
+void GameLoop();
 
 int main()
 {
-	string _weapons[_weaponsAmount], _enemies[_enemiesAmount];
+	//string _weapons[_weaponsAmount], _enemies[_enemiesAmount];
 	Display("BIENVENUE DANS L'ARENE !");
-	GameLoop()
-		return 0;
+	GameLoop();
+	return 0;
 }
 
 //Boucle jeu
@@ -23,39 +23,27 @@ void GameLoop()
 	bool _returnMenu = true;
 	do
 	{
-
 		Display("Rentre dans l'arene -> combat");
 		Display("Ton Inventaire -> inventaire");
 		Display("Veux tu aller au shop ? -> shop");
 		cin >> _reponse;
 
-		switch (_reponse)
+		if (_reponse == "combat")
 		{
-		case "combat":
-			CombatLoop();//vie, arme, enemi, listenemi, enemistat
-			break;
 
-		case "shop":
-			break;
-
-		case "inventaire":
-			break;
-
-		default:
-			break;
 		}
-		//aller au shop
+		else if (_reponse == "inventaire")
+		{
 
+		}
+		else if (_reponse == "shop")
+		{
 
-
-
-		// choix oui ou non		
-
-
-
-		//afficher inventaire actuel
-
-		cin >> _reponse;
+		}
+		else
+		{
+			cout << "Choix invalide" << endl;
+		}
 
 	} while (_returnMenu);
 
