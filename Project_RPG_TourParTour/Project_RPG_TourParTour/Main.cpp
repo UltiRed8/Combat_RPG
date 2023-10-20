@@ -9,6 +9,7 @@ void DisplayValue(string _text, int _value);
 int UpdateHealth(int _currentHealth, int _addValue, int _maxPlayerHealth);
 void CombatLoop();
 int IntInput(string _question, int _min, int _max);
+void GameLoop();
 
 int main()
 {
@@ -27,7 +28,43 @@ int main()
 
 	_enemies[0] = "Enemi 1"; _enemiesStats[0][0] = 6; _enemiesStats[0][1] = 3; _enemiesStats[0][2] = 8; // Enemi 1 6pv 3dégats 8pièces
 
+	Display("BIENVENUE DANS L'ARENE !");
+	GameLoop();
+
 	return 0;
+}
+
+
+void GameLoop()
+{
+	string _reponse;
+	bool _returnMenu = true;
+	do
+	{
+		Display("Rentre dans l'arene -> combat");
+		Display("Ton Inventaire -> inventaire");
+		Display("Veux tu aller au shop ? -> shop");
+		cin >> _reponse;
+
+		if (_reponse == "combat")
+		{
+
+		}
+		else if (_reponse == "inventaire")
+		{
+
+		}
+		else if (_reponse == "shop")
+		{
+
+		}
+		else
+		{
+			cout << "Choix invalide" << endl;
+		}
+
+	} while (_returnMenu);
+
 }
 
 int UpdateHealth(int _currentHealth, int _addValue, int _maxPlayerHealth) {
@@ -85,7 +122,7 @@ void DisplayValue(string _text, int _value) {
 void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes) {
 	if (_text != "") cout << _text << endl;
 	for (int _i = 0; _i < _sizeOfList; _i++) {
-		if (_printIndexes) cout << _i;
+			if (_printIndexes) cout << _i;
 		cout << "- " << _list[_i] << endl;
 	}
 }
