@@ -6,16 +6,18 @@ using namespace std;
 void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes);
 void Display(string _text);
 void DisplayValue(string _text, int _value);
-bool CombatLoop(int _currentHealth, int _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int _healItemAmount, bool _playerInventory[], int _weaponsAmount);
+bool CombatLoop(int& _currentHealth, int _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount);
 int IntInput(string _question, int _min, int _max);
 void DisplayWeapons(string _text, const string _weapons[], int _weaponsAmount, bool _printIndexes, bool _showInventoryItems, const bool _hasItem[]);
 void GameLoop();
-void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weaponsInInventory[], int _weaponsStats[][3]);
+void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weaponsInInventory[], int _weaponsStats[][3], int& _healItemAmount);
 int Inventory(bool _playerInventory[], int _weaponsAmount, string _weapons[]);
 
 int main()
 {
+	Display("\x1B[93m========================");
 	Display("BIENVENUE DANS L'ARENE !");
+	Display("========================\x1B[37m");
 	GameLoop();
 	return 0;
 }
@@ -43,7 +45,9 @@ void GameLoop()
 	bool _returnMenu = true;
 	do
 	{
-		Display("Ton argent : "); cout << _playerMoney << endl;
+		DisplayValue(">>> Votre argent : ", _playerMoney);
+		DisplayValue(">>> Votre vie : ", _playerHealth);
+		Display("\x1B[31m========");
 		Display("Rentre dans l'arene -> combat \n");
 		Display("Ton Inventaire -> inventaire \n");
 		Display("Veux tu aller au shop ? -> shop \n");
@@ -68,7 +72,7 @@ void GameLoop()
 		else if (_reponse == "shop")
 		{
 
-			Shop(_playerMoney, _weapons, _weaponsAmount, _weaponsInInventory, _weaponsStats);
+			Shop(_playerMoney, _weapons, _weaponsAmount, _weaponsInInventory, _weaponsStats, _healItemAmount);
 		}
 		else
 		{
@@ -77,7 +81,7 @@ void GameLoop()
 	} while (_returnMenu);
 }
 
-bool CombatLoop(int _currentHealth, int _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int _healItemAmount, bool _playerInventory[], int _weaponsAmount) {
+bool CombatLoop(int& _currentHealth, int _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount) {
 	bool _shouldLoop = true, _actionLoop = true;
 	bool _won = false;
 	Display("Début du combat contre" + _enemies[_enemyId] + " !");
@@ -104,8 +108,8 @@ bool CombatLoop(int _currentHealth, int _maxHealth, int _weaponId, int _enemyId,
 				if (_healItemAmount - 1 >= 0) {
 					_healItemAmount--;
 					_currentHealth = _maxHealth;
+					_actionLoop = false;
 				} else Display("Vous n'avez pas d'item de soin!");
-				_actionLoop = false;
 				break;
 			default:
 				break;
@@ -164,7 +168,7 @@ void DisplayList(string _text, const string _list[], int _sizeOfList, bool _prin
 	}
 }
 
-void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weaponsInInventory[], int _weaponsStats[][3])
+void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weaponsInInventory[], int _weaponsStats[][3], int& _healItemAmount)
 {
 	bool _wantContinue = true;
 	int _idChoose;
@@ -173,12 +177,18 @@ void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weapons
 		system("cls");
 		DisplayValue("Ton argent est : ", _playerMoney);
 		DisplayWeapons("Voici le stock : ", _weapons, _weaponsAmount, true, false, _weaponsInInventory);
-		Display("-1 pour quitter le shop");
+		Display("-2 pour quitter le shop \n");
+		Display("-1 pour acheter potion de soin \n");
 
 		cin >> _idChoose;
-		if (_idChoose == -1)
+		if (_idChoose == -2)
 		{
 			_wantContinue = false;
+		}
+		else if (_idChoose == -1)
+		{
+			_healItemAmount++;
+			_playerMoney -= 10;
 		}
 		else
 		{
