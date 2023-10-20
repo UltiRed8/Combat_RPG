@@ -1,12 +1,13 @@
 #include <iostream>
 #include <string>
+#include <cstdlib>
 
 using namespace std;
 
 void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes);
 void Display(string _text);
 void DisplayValue(string _text, int _value);
-bool CombatLoop(int& _currentHealth, int _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount);
+bool CombatLoop(int& _currentHealth, int& _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount);
 int IntInput(string _question, int _min, int _max);
 void DisplayWeapons(string _text, const string _weapons[], int _weaponsAmount, bool _printIndexes, bool _showInventoryItems, const bool _hasItem[]);
 void GameLoop();
@@ -25,7 +26,7 @@ int main()
 
 void GameLoop()
 {
-	const int _weaponsAmount = 2, _enemiesAmount = 1;
+	const int _weaponsAmount = 2, _enemiesAmount = 2;
 	int _playerHealth = 10, _playerMaxHealth = 10;
 	int _playerMoney = 0;
 	int _playerWeaponId = 0;
@@ -36,10 +37,11 @@ void GameLoop()
 	int _weaponsStats[_weaponsAmount][3]; // 0=> Degats  1=> Precision  2=> Prix shop
 	int _enemiesStats[_enemiesAmount][3]; // 0=> Vie  1=> Degats  2=>Pièces
 
-	_weapons[0] = "Arme 1"; _weaponsStats[0][0] = 5; _weaponsStats[0][1] = 75; _weaponsStats[0][2] = 0; // Arme 1 5degats 75%precision 0prix
-	_weapons[1] = "Arme 2"; _weaponsStats[1][0] = 10; _weaponsStats[1][1] = 50; _weaponsStats[1][2] = 10; // Arme 2 10degats 50%precision 10prix
+	_weapons[0] = "Arme - 5 Degats - 75% Precision"; _weaponsStats[0][0] = 5; _weaponsStats[0][1] = 75; _weaponsStats[0][2] = 0;
+	_weapons[1] = "Arme - 10 Degats - 50% Precision"; _weaponsStats[1][0] = 10; _weaponsStats[1][1] = 50; _weaponsStats[1][2] = 10;
 
-	_enemies[0] = "Enemi 1"; _enemiesStats[0][0] = 6; _enemiesStats[0][1] = 3; _enemiesStats[0][2] = 8; // Enemi 1 6pv 3degats 8pièces
+	_enemies[0] = "Enemi - 8 Pièces"; _enemiesStats[0][0] = 6; _enemiesStats[0][1] = 3; _enemiesStats[0][2] = 8;
+	_enemies[1] = "Enemi - 12 Pièces"; _enemiesStats[1][0] = 15; _enemiesStats[1][1] = 5; _enemiesStats[1][2] = 12;
 
 	string _reponse;
 	bool _returnMenu = true;
@@ -51,7 +53,8 @@ void GameLoop()
 		Display("\x1B[90m========\x1B[37m");
 		Display("- Combat => Faire un combat");
 		Display("- Inventaire => Changer d'arme");
-		Display("- Shop => Ouvrir le shop\x1B[96m");
+		Display("- Shop => Ouvrir le shop");
+		Display("- Quitter => Quitter le jeu\x1B[96m");
 		cin >> _reponse;
 		if (_reponse == "Combat")
 		{
@@ -59,7 +62,7 @@ void GameLoop()
 			//choix du combat
 			
 			Display("\x1B[90m========LISTE ENEMIS========\x1B[37m");
-			DisplayList("", _enemies, 1, true);
+			DisplayList("", _enemies, _enemiesAmount, true);
 			Display("\x1B[90m========\x1B[37m");
 			int _enemyId = IntInput("\x1B[37mRentrer ID de l'ennemi a affronter : \x1B[96m", 0, 1);
 
@@ -77,6 +80,11 @@ void GameLoop()
 
 			Shop(_playerMoney, _weapons, _weaponsAmount, _weaponsInInventory, _weaponsStats, _healItemAmount);
 		}
+		else if (_reponse == "Quitter")
+		{
+
+			_returnMenu = false;
+		}
 		else
 		{
 			Display("\x1B[91mChoix invalide");
@@ -84,7 +92,7 @@ void GameLoop()
 	} while (_returnMenu);
 }
 
-bool CombatLoop(int& _currentHealth, int _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount) {
+bool CombatLoop(int& _currentHealth, int& _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount) {
 	bool _shouldLoop = true, _actionLoop = true;
 	bool _won = false;
 	Display("\x1B[91mDebut du combat contre \x1B[31m" + _enemies[_enemyId] + "\x1B[91m !\x1B[37m");
@@ -101,8 +109,13 @@ bool CombatLoop(int& _currentHealth, int _maxHealth, int _weaponId, int _enemyId
 			switch (IntInput("\x1B[37mEntrez le numero de l'action : \x1B[96m", 0, 3)) {
 			case 0:
 				_actionLoop = false;
-				_enemyLife -= _weaponsStats[_weaponId][0];
-				DisplayValue("\x1B[92mVous avez attaque l'enemi : \x1B[91m", _weaponsStats[_weaponId][0]);
+				srand(time(NULL));
+				if ((rand() % 100) < _weaponsStats[_weaponId][1]) {
+					_enemyLife -= _weaponsStats[_weaponId][0];
+					DisplayValue("\x1B[92mVous avez attaque l'enemi : \x1B[91m", _weaponsStats[_weaponId][0]);
+				} else {
+					Display("\x1B[91mVous avez rate l'enemi !");
+				}
 				break;
 			case 1:
 				_weaponId = Inventory(_playerInventory, _weaponsAmount, _weapons);
@@ -124,12 +137,18 @@ bool CombatLoop(int& _currentHealth, int _maxHealth, int _weaponId, int _enemyId
 			_currentHealth -= _enemyDamages;
 			Display("\x1B[33mL'enemi vous as attaque, vous perdez \x1B[31m" + to_string(_enemyDamages) + "\x1B[33m points de vie!");
 		}
-		if (_won || _currentHealth == 0) _shouldLoop = false;
+		if (_won || _currentHealth <= 0) _shouldLoop = false;
 		system("PAUSE");
 		system("cls");
 	} while (_shouldLoop);
-	if (_won) Display("\x1B[92mTu as gagne le combat!");
-	else Display("\x1B[31mTu as perdu le combat!");
+	if (_won) {
+		Display("\x1B[92mTu as gagne le combat!");
+		_maxHealth++;
+		_currentHealth = _maxHealth;
+	} else {
+		Display("\x1B[31mTu as perdu le combat!");
+		_currentHealth = _maxHealth / 2;
+	}
 	return _won;
 }
 
@@ -210,7 +229,7 @@ void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weapons
 		{
 			if (_weaponsInInventory[_idChoose])
 			{
-				Display("Tu as deja cette arme");
+				Display("\x1B[91mTu as deja cette arme");
 			}
 			else
 			{
