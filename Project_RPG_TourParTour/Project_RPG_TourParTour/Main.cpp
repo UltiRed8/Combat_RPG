@@ -2,20 +2,17 @@
 #include <string>
 #include <cstdlib>
 
-#include "colors.h"
-
-using namespace std;
+#include "Game.h"
 
 void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes);
 void Display(string _text);
 void DisplayValue(string _text, int _value);
-bool CombatLoop(int& _currentHealth, int& _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount);
-int IntInput(string _question, int _min, int _max);
+bool CombatLoop(Game& _game, int _weaponId);
+int IntInput(const string& _question, int _min, int _max);
 void DisplayWeapons(string _text, const string _weapons[], int _weaponsAmount, bool _printIndexes, bool _showInventoryItems, const bool _hasItem[]);
 void GameLoop();
-void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weaponsInInventory[], int _weaponsStats[][3], int& _healItemAmount);
-int Inventory(bool _playerInventory[], int _weaponsAmount, string _weapons[]);
-string StringInput(const string _question);
+void Shop(Game& _game);
+string StringInput(const string& _question);
 
 int main() {
 	DISPLAY(BRIGHT_YELLOW << "========================");
@@ -25,31 +22,17 @@ int main() {
 	return 0;
 }
 
-
 void GameLoop() {
-	const int _weaponsAmount = 2, _enemiesAmount = 2;
-	int _playerHealth = 10, _playerMaxHealth = 10;
-	int _playerMoney = 0;
-	int _playerWeaponId = 0;
-	int _healItemAmount = 0;
-	bool _weaponsInInventory[_weaponsAmount]{ true };
-
-	string _weapons[_weaponsAmount], _enemies[_enemiesAmount];
-	int _weaponsStats[_weaponsAmount][3]; // 0=> Degats  1=> Precision  2=> Prix shop
-	int _enemiesStats[_enemiesAmount][3]; // 0=> Vie  1=> Degats  2=>Pièces
-
-	_weapons[0] = "Arme - 5 Degats - 75% Precision"; _weaponsStats[0][0] = 5; _weaponsStats[0][1] = 75; _weaponsStats[0][2] = 0;
-	_weapons[1] = "Arme - 10 Degats - 50% Precision"; _weaponsStats[1][0] = 10; _weaponsStats[1][1] = 50; _weaponsStats[1][2] = 10;
-
-	_enemies[0] = "Enemi - 8 Pieces"; _enemiesStats[0][0] = 6; _enemiesStats[0][1] = 3; _enemiesStats[0][2] = 8;
-	_enemies[1] = "Enemi - 12 Pieces"; _enemiesStats[1][0] = 15; _enemiesStats[1][1] = 5; _enemiesStats[1][2] = 12;
-
+	Game _game = Game();
+	_game.AddEnemy(Enemy("Enemi 1", 6, 3, 8));
+	_game.AddEnemy(Enemy("Enemi 2", 15, 5, 12));
+	_game.AddWeapon(Weapon("Arme 1", 10, 50, 10));
 	string _response;
 	bool _returnMenu = true;
 	do {
 		DISPLAY(BRIGHT_BLACK << "========MENU PRINCIPALE========" << WHITE);
-		DISPLAY(">>> Vous avez " << _playerMoney << " pieces !");
-		DISPLAY(">>> Votre vie : " << _playerHealth);
+		DISPLAY(">>> Vous avez " << _game.GetPlayer()->GetMoney() << " pieces !");
+		DISPLAY(">>> Votre vie : " << _game.GetPlayer()->GetHealth());
 		DISPLAY(BRIGHT_BLACK << "========" << WHITE);
 		DISPLAY("- Combat => Faire un combat");
 		DISPLAY("- Inventaire => Changer d'arme");
@@ -57,31 +40,30 @@ void GameLoop() {
 		DISPLAY("- Quitter => Quitter le jeu" << BRIGHT_CYAN);
 		_response = StringInput("Que voulez vous faire ?");
 		if (_response == "Combat") {
-			system("cls");
+			std::system("cls");
 			DISPLAY(BRIGHT_BLACK << "========LISTE ENEMIS========" << WHITE);
-			DisplayList("", _enemies, _enemiesAmount, true);
+			_game.DisplayEnemies();
 			DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-			int _enemyId = IntInput("Rentrez l'ID de l'ennemi a affronter :", 0, _enemiesAmount-1);
-			if (CombatLoop(_playerHealth, _playerMaxHealth, _playerWeaponId, _enemyId, _enemies, _enemiesStats, _weapons, _weaponsStats, _healItemAmount, _weaponsInInventory, _weaponsAmount)) {
-				_playerMoney += _enemiesStats[_enemyId][2];
+			int _enemyId = IntInput("Rentrez l'ID de l'ennemi a affronter :", 0, _game.GetEnemiesAmount() - 1);
+			if (CombatLoop(_game, _enemyId)) {
+				_game.GetPlayer()->AddMoney(_game.GetEnemies()[_enemyId].GetReward());
 			}
-		} else if (_response == "Inventaire") _playerWeaponId = Inventory(_weaponsInInventory, _weaponsAmount, _weapons);
-		else if (_response == "Shop") Shop(_playerMoney, _weapons, _weaponsAmount, _weaponsInInventory, _weaponsStats, _healItemAmount);
+		} else if (_response == "Inventaire") _game.GetPlayer()->Inventory();
+		else if (_response == "Shop") Shop(_game);
 		else if (_response == "Quitter") _returnMenu = false;
 		else DISPLAY(RED << "Choix invalide !");
 	} while (_returnMenu);
 }
 
-bool CombatLoop(int& _currentHealth, int& _maxHealth, int _weaponId, int _enemyId, string _enemies[], int _enemiesStats[][3], string _weapons[], int _weaponsStats[][3], int& _healItemAmount, bool _playerInventory[], int _weaponsAmount) {
+bool CombatLoop(Game& _game, int _enemyId) {
 	bool _shouldLoop = true, _actionLoop = true;
 	bool _won = false;
-	DISPLAY(BRIGHT_RED << "Debut du combat contre " << RED << _enemies[_enemyId] << BRIGHT_RED << " !");
-	int _enemyLife = _enemiesStats[_enemyId][0];
-	int _enemyDamages = _enemiesStats[_enemyId][1];
+	DISPLAY(BRIGHT_RED << "Debut du combat contre " << RED << _game.GetEnemies()[_enemyId].GetName() << BRIGHT_RED << " !");
+	_game.GetEnemies()[_enemyId].Reset();
 	string _actions[] = { "Attaquer", "Changer d'arme", "Utiliser soin" };
 	do {
-		DISPLAY(WHITE << ">>>Vie de l'enemi: " << _enemyLife);
-		DISPLAY(">>>Votre vie: " << _currentHealth);
+		DISPLAY(WHITE << ">>> Vie de l'enemi: " << _game.GetEnemies()[_enemyId].GetHealth());
+		DISPLAY(">>> Votre vie: " << _game.GetPlayer()->GetHealth());
 		DISPLAY(BRIGHT_BLACK << "========");
 		DisplayList("Selectionnez l'action a effectuer :", _actions, 3, true);
 		_actionLoop = true;
@@ -90,101 +72,81 @@ bool CombatLoop(int& _currentHealth, int& _maxHealth, int _weaponId, int _enemyI
 			case 0:
 				_actionLoop = false;
 				srand(time(NULL));
-				if ((rand() % 100) < _weaponsStats[_weaponId][1]) {
-					_enemyLife -= _weaponsStats[_weaponId][0];
-					DISPLAY(BRIGHT_GREEN << "Vous avez attaque l'enemi :" << BRIGHT_RED << _weaponsStats[_weaponId][0]);
+				if ((rand() % 100) < _game.GetPlayer()->GetHeldWeapon().GetPrecision()) {
+					_game.GetEnemies()[_enemyId].ApplyDamages(_game.GetPlayer()->GetHeldWeapon().GetDamages());
+					DISPLAY(BRIGHT_GREEN << "Vous avez attaque l'enemi : " << BRIGHT_RED << _game.GetPlayer()->GetHeldWeapon().GetDamages());
 				} else DISPLAY(BRIGHT_RED << "Vous avez rate l'enemi !");
 				break;
 			case 1:
-				_weaponId = Inventory(_playerInventory, _weaponsAmount, _weapons);
+				_game.GetPlayer()->Inventory();
 				_actionLoop = false;
 				break;
 			case 2:
-				if (_healItemAmount - 1 >= 0) {
-					_healItemAmount--;
-					_currentHealth = _maxHealth;
-					_actionLoop = false;
-				}
-				else DISPLAY(BRIGHT_RED << "Vous n'avez pas d'item de soin !");
+				if (_game.GetPlayer()->UseHealItem()) _actionLoop = false;
 				break;
 			default:
 				DISPLAY(RED << "Choix invalide !");
 				break;
 			}
 		} while (_actionLoop);
-		if (_enemyLife <= 0) _won = true;
+		if (_game.GetEnemies()[_enemyId].IsDead()) _won = true;
 		if (!_won) {
-			_currentHealth -= _enemyDamages;
-			DISPLAY(YELLOW << "L'enemi vous as attaque, vous perdez " << RED << _enemyDamages << YELLOW << " points de vie !");
+			_game.GetPlayer()->ApplyDamages(_game.GetEnemies()[_enemyId].GetDamages());
+			DISPLAY(YELLOW << "L'enemi vous as attaque, vous perdez " << RED << _game.GetEnemies()[_enemyId].GetDamages() << YELLOW << " points de vie !");
 		}
-		if (_won || _currentHealth <= 0) _shouldLoop = false;
+		if (_won || _game.GetPlayer()->IsDead()) _shouldLoop = false;
 		system("PAUSE");
 		system("cls");
 	} while (_shouldLoop);
 	if (_won) {
 		DISPLAY(BRIGHT_GREEN << "Tu as gagne le combat !");
-		_maxHealth++;
-		_currentHealth = _maxHealth;
+		_game.GetPlayer()->FightWon();
 	} else {
 		DISPLAY(RED << "Tu as perdu le combat !");
-		_currentHealth = _maxHealth / 2;
+		_game.GetPlayer()->FightLost();
 	}
 	return _won;
 }
 
-int Inventory(bool _playerInventory[], int _weaponsAmount, string _weapons[]) {
-	int _wantedWeapon = 0;
-	DISPLAY(BRIGHT_BLACK << "========INVENTAIRE========" << WHITE);
-	DisplayWeapons("Vos armes :", _weapons, _weaponsAmount, true, true, _playerInventory);
-	DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-	_wantedWeapon = IntInput("Entrez l'id de l'arme que vous souhaitez utiliser :", 0, _weaponsAmount-1);
-	return _wantedWeapon;
-}
-
-void Shop(int& _playerMoney, string* _weapons, int _weaponsAmount, bool _weaponsInInventory[], int _weaponsStats[][3], int& _healItemAmount) {
+void Shop(Game& _game) {
 	bool _wantContinue = true;
 	int _idChoose;
 	do {
 		system("cls");
 		DISPLAY(BRIGHT_BLACK << "========SHOP========" << WHITE);
-		DISPLAY(">>> Vous avez " << _playerMoney << " pieces !");
+		DISPLAY(">>> Vous avez " << _game.GetPlayer()->GetMoney() << " pieces !");
 		DISPLAY(BRIGHT_BLACK << "========" << WHITE);
 		DISPLAY("Disponible :");
 		DISPLAY("-2 => Pour quitter le shop");
 		DISPLAY("-1 => Pour acheter potion de soin");
-		DisplayWeapons("", _weapons, _weaponsAmount, true, false, _weaponsInInventory);
+		_game.DisplayWeapons();
 		DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-		_idChoose = IntInput("Entrez l'id de ce que vous souhaitez faire :", -2, _weaponsAmount-1);
+		_idChoose = IntInput("Entrez l'id de ce que vous souhaitez faire :", -2, _game.GetWeaponsAmount() - 1);
 		if (_idChoose == -2) {
 			_wantContinue = false;
 			system("cls");
 		} else if (_idChoose == -1) {
-			if (_playerMoney < 10) {
+			if (_game.GetPlayer()->GetMoney() < 10) {
 				DISPLAY(BRIGHT_RED << "Tu est trop pauvre !");
 				system("PAUSE");
 				continue;
 			}
-			_healItemAmount++;
-			_playerMoney -= 10;
+			_game.GetPlayer()->AddHealItem(1);
+			_game.GetPlayer()->RemoveMoney(10);
 		} else {
-			if (_weaponsInInventory[_idChoose]) {
-				DISPLAY(BRIGHT_RED << "Tu as deja cette arme !");
+			if (_game.GetPlayer()->GetMoney() < _game.GetWeapons()[_idChoose].GetPrice()) {
+				DISPLAY(BRIGHT_RED << "Tu est trop pauvre !");
 				system("PAUSE");
-			} else {
-				if (_playerMoney < _weaponsStats[_idChoose][2]) {
-					DISPLAY(BRIGHT_RED << "Tu est trop pauvre !");
-					system("PAUSE");
-					continue;
-				}
-				_weaponsInInventory[_idChoose] = true;
-				_playerMoney -= _weaponsStats[_idChoose][2];
-				system("PAUSE");
+				continue;
 			}
+			_game.GetPlayer()->RemoveMoney(_game.GetWeapons()[_idChoose].GetPrice());
+			_game.BuyWeapon(_idChoose);
+			system("PAUSE");
 		}
 	} while (_wantContinue);
 }
 
-int IntInput(string _question, int _min, int _max) {
+int IntInput(const string& _question, int _min, int _max) {
 	while (_min > _max) _min--;
 	int _result = _min - 1;
 	do {
@@ -195,7 +157,7 @@ int IntInput(string _question, int _min, int _max) {
 	return _result;
 }
 
-string StringInput(const string _question) {
+string StringInput(const string& _question) {
 	DISPLAY(endl << YELLOW << _question << BRIGHT_CYAN);
 	cout << "> ";
 	string _result;
