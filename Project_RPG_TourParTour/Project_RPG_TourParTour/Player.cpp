@@ -1,5 +1,6 @@
 #include "Player.h"
 
+#pragma region ConstructorsAndDeconstructors
 Player::Player() {
 	health = 10;
 	maxHealth = 10;
@@ -27,6 +28,7 @@ Player::Player(const int _maxHealth) {
 Player::~Player() {
 	delete[] ownedWeapons;
 }
+#pragma endregion
 
 void Player::AddMoney(const int _byAmount) {
 	money += _byAmount;

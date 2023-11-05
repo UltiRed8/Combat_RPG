@@ -34,4 +34,3 @@ public:
 public:
 	void Display(const bool _withPrice) const;
 };
-

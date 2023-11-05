@@ -36,4 +36,3 @@ public:
 	void ApplyDamages(const int _amount);
 	bool IsDead() const;
 };
-

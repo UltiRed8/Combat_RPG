@@ -47,4 +47,3 @@ public:
 	void FightLost();
 	void AddHealItem(const int _amount);
 };
-

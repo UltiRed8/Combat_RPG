@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#pragma region ConstructorsAndDeconstructors
 Enemy::Enemy() {
 	name = "null";
 	health = 10;
@@ -17,6 +18,7 @@ Enemy::Enemy(const string& _name, const int _health, const int _damages, const i
 	reward = _reward;
 	currentHealth = health;
 }
+#pragma endregion
 
 void Enemy::Display() const {
 	DISPLAY(name << " | " << health << " pv | " << damages << " degats | " << reward << " pieces");

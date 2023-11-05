@@ -4,15 +4,15 @@
 
 #include "Game.h"
 
-void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes);
-void Display(string _text);
-void DisplayValue(string _text, int _value);
-bool CombatLoop(Game& _game, int _weaponId);
-int IntInput(const string& _question, int _min, int _max);
-void DisplayWeapons(string _text, const string _weapons[], int _weaponsAmount, bool _printIndexes, bool _showInventoryItems, const bool _hasItem[]);
+#pragma region forwards
 void GameLoop();
+Game CreateElements();
+bool CombatLoop(Game& _game, int _weaponId);
 void Shop(Game& _game);
+void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes);
+int IntInput(const string& _question, int _min, int _max);
 string StringInput(const string& _question);
+#pragma endregion
 
 int main() {
 	DISPLAY(BRIGHT_YELLOW << "========================");
@@ -23,10 +23,7 @@ int main() {
 }
 
 void GameLoop() {
-	Game _game = Game();
-	_game.AddEnemy(Enemy("Enemi 1", 6, 3, 8));
-	_game.AddEnemy(Enemy("Enemi 2", 15, 5, 12));
-	_game.AddWeapon(Weapon("Arme 1", 10, 50, 10));
+	Game _game = CreateElements();
 	string _response;
 	bool _returnMenu = true;
 	do {
@@ -55,14 +52,24 @@ void GameLoop() {
 	} while (_returnMenu);
 }
 
+Game CreateElements() {
+	Game _game = Game();
+	// Name Health Damages Reward
+	_game.AddEnemy(Enemy("Enemi 1", 6, 3, 8));
+	_game.AddEnemy(Enemy("Enemi 2", 15, 5, 12));
+	// Name Damages Precision Price
+	_game.AddWeapon(Weapon("Arme 1", 10, 50, 10));
+	return _game;
+}
+
 bool CombatLoop(Game& _game, int _enemyId) {
-	bool _shouldLoop = true, _actionLoop = true;
-	bool _won = false;
-	DISPLAY(BRIGHT_RED << "Debut du combat contre " << RED << _game.GetEnemies()[_enemyId].GetName() << BRIGHT_RED << " !");
-	_game.GetEnemies()[_enemyId].Reset();
+	bool _shouldLoop = true, _actionLoop = true, _won = false;
+	Enemy _enemy = _game.GetEnemies()[_enemyId];
+	DISPLAY(BRIGHT_RED << "Debut du combat contre " << RED << _enemy.GetName() << BRIGHT_RED << " !");
+	_enemy.Reset();
 	string _actions[] = { "Attaquer", "Changer d'arme", "Utiliser soin" };
 	do {
-		DISPLAY(WHITE << ">>> Vie de l'enemi: " << _game.GetEnemies()[_enemyId].GetHealth());
+		DISPLAY(WHITE << ">>> Vie de l'enemi: " << _enemy.GetHealth());
 		DISPLAY(">>> Votre vie: " << _game.GetPlayer()->GetHealth());
 		DISPLAY(BRIGHT_BLACK << "========");
 		DisplayList("Selectionnez l'action a effectuer :", _actions, 3, true);
@@ -73,7 +80,7 @@ bool CombatLoop(Game& _game, int _enemyId) {
 				_actionLoop = false;
 				srand(time(NULL));
 				if ((rand() % 100) < _game.GetPlayer()->GetHeldWeapon().GetPrecision()) {
-					_game.GetEnemies()[_enemyId].ApplyDamages(_game.GetPlayer()->GetHeldWeapon().GetDamages());
+					_enemy.ApplyDamages(_game.GetPlayer()->GetHeldWeapon().GetDamages());
 					DISPLAY(BRIGHT_GREEN << "Vous avez attaque l'enemi : " << BRIGHT_RED << _game.GetPlayer()->GetHeldWeapon().GetDamages());
 				} else DISPLAY(BRIGHT_RED << "Vous avez rate l'enemi !");
 				break;
@@ -89,10 +96,10 @@ bool CombatLoop(Game& _game, int _enemyId) {
 				break;
 			}
 		} while (_actionLoop);
-		if (_game.GetEnemies()[_enemyId].IsDead()) _won = true;
+		if (_enemy.IsDead()) _won = true;
 		if (!_won) {
-			_game.GetPlayer()->ApplyDamages(_game.GetEnemies()[_enemyId].GetDamages());
-			DISPLAY(YELLOW << "L'enemi vous as attaque, vous perdez " << RED << _game.GetEnemies()[_enemyId].GetDamages() << YELLOW << " points de vie !");
+			_game.GetPlayer()->ApplyDamages(_enemy.GetDamages());
+			DISPLAY(YELLOW << "L'enemi vous as attaque, vous perdez " << RED << _enemy.GetDamages() << YELLOW << " points de vie !");
 		}
 		if (_won || _game.GetPlayer()->IsDead()) _shouldLoop = false;
 		system("PAUSE");
@@ -146,6 +153,7 @@ void Shop(Game& _game) {
 	} while (_wantContinue);
 }
 
+#pragma region Inputs
 int IntInput(const string& _question, int _min, int _max) {
 	while (_min > _max) _min--;
 	int _result = _min - 1;
@@ -164,29 +172,9 @@ string StringInput(const string& _question) {
 	cin >> _result;
 	return _result;
 }
+#pragma endregion
 
-void DisplayWeapons(string _text, const string _weapons[], int _weaponsAmount, bool _printIndexes, bool _showInventoryItems, const bool _hasItem[]) {
-	if (_text != "") DISPLAY(WHITE << _text);
-	for (int _i = 0; _i < _weaponsAmount; _i++) {
-		if (_hasItem[_i] == _showInventoryItems) {
-			if (_printIndexes) cout << _i;
-			DISPLAY(" => " << _weapons[_i]);
-		}
-	}
-}
-
-void Display(string _text) {
-	cout << _text << endl;
-}
-
-void Display(int _text) {
-	cout << _text << endl;
-}
-
-void DisplayValue(string _text, int _value) {
-	cout << _text << _value << endl;
-}
-
+#pragma region Displays
 void DisplayList(string _text, const string _list[], int _sizeOfList, bool _printIndexes) {
 	if (_text != "") DISPLAY(WHITE << _text);
 	for (int _i = 0; _i < _sizeOfList; _i++) {
@@ -194,3 +182,4 @@ void DisplayList(string _text, const string _list[], int _sizeOfList, bool _prin
 		DISPLAY(" => " << _list[_i]);
 	}
 }
+#pragma endregion

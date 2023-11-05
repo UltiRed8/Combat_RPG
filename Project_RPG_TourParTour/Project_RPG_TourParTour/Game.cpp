@@ -4,6 +4,7 @@
 
 using namespace std;
 
+#pragma region ConstructorsAndDeconstructors
 Game::Game() {
 	weaponsAmount = 0;
 	enemiesAmount = 0;
@@ -17,6 +18,7 @@ Game::~Game() {
 	delete[] weapons;
 	delete[] enemies;
 }
+#pragma endregion
 
 void Game::RemoveWeapon(Weapon& _weapon) {
 	weaponsAmount--;
