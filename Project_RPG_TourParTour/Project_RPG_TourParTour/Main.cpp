@@ -15,9 +15,9 @@ string StringInput(const string& _question);
 #pragma endregion
 
 int main() {
-	DISPLAY(BRIGHT_YELLOW << "========================");
-	DISPLAY("BIENVENUE DANS L'ARENE");
-	DISPLAY("========================");
+	DISPLAY(BRIGHT_YELLOW << "====================");
+	DISPLAY("WELCOME TO THE ARENA");
+	DISPLAY("====================");
 	GameLoop();
 	return 0;
 }
@@ -27,62 +27,64 @@ void GameLoop() {
 	string _response;
 	bool _returnMenu = true;
 	do {
-		DISPLAY(BRIGHT_BLACK << "========MENU PRINCIPALE========" << WHITE);
-		DISPLAY(">>> Vous avez " << _game.GetPlayer()->GetMoney() << " pieces !");
-		DISPLAY(">>> Votre vie : " << _game.GetPlayer()->GetHealth());
+		DISPLAY(BRIGHT_BLACK << "========MAIN MENU========" << WHITE);
+		DISPLAY(">>> You have " << _game.GetPlayer()->GetMoney() << " coins!");
+		DISPLAY(">>> HP : " << _game.GetPlayer()->GetHealth());
 		DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-		DISPLAY("- Combat => Faire un combat");
-		DISPLAY("- Inventaire => Changer d'arme");
-		DISPLAY("- Shop => Ouvrir le shop");
-		DISPLAY("- Quitter => Quitter le jeu" << BRIGHT_CYAN);
-		_response = StringInput("Que voulez vous faire ?");
-		if (_response == "Combat") {
+		DISPLAY("- Fight => Starts a fight");
+		DISPLAY("- Inventory => Switches weapon");
+		DISPLAY("- Shop => Opens the shop");
+		DISPLAY("- Quit => Quit the game" << BRIGHT_CYAN);
+		_response = StringInput("What would you like to do?");
+		if (_response == "Fight") {
 			std::system("cls");
-			DISPLAY(BRIGHT_BLACK << "========LISTE ENEMIS========" << WHITE);
+			DISPLAY(BRIGHT_BLACK << "========ENEMIES LIST========" << WHITE);
 			_game.DisplayEnemies();
 			DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-			int _enemyId = IntInput("Rentrez l'ID de l'ennemi a affronter :", 0, _game.GetEnemiesAmount() - 1);
+			int _enemyId = IntInput("Enter the ID of the enemy you would like to fight:", 0, _game.GetEnemiesAmount() - 1);
 			if (CombatLoop(_game, _enemyId)) {
 				_game.GetPlayer()->AddMoney(_game.GetEnemies()[_enemyId].GetReward());
 			}
-		} else if (_response == "Inventaire") _game.GetPlayer()->Inventory();
+		}
+		else if (_response == "Inventory") _game.GetPlayer()->Inventory();
 		else if (_response == "Shop") Shop(_game);
-		else if (_response == "Quitter") _returnMenu = false;
-		else DISPLAY(RED << "Choix invalide !");
+		else if (_response == "Quit") _returnMenu = false;
+		else DISPLAY(RED << "Invalid choice!");
 	} while (_returnMenu);
 }
 
 Game CreateElements() {
 	Game _game = Game();
 	// Name Health Damages Reward
-	_game.AddEnemy(Enemy("Enemi 1", 6, 3, 8));
-	_game.AddEnemy(Enemy("Enemi 2", 15, 5, 12));
+	_game.AddEnemy(Enemy("Enemy 1", 6, 3, 8));
+	_game.AddEnemy(Enemy("Enemy 2", 15, 5, 12));
 	// Name Damages Precision Price
-	_game.AddWeapon(Weapon("Arme 1", 10, 50, 10));
+	_game.AddWeapon(Weapon("Weapon 1", 10, 50, 10));
 	return _game;
 }
 
 bool CombatLoop(Game& _game, int _enemyId) {
 	bool _shouldLoop = true, _actionLoop = true, _won = false;
 	Enemy _enemy = _game.GetEnemies()[_enemyId];
-	DISPLAY(BRIGHT_RED << "Debut du combat contre " << RED << _enemy.GetName() << BRIGHT_RED << " !");
+	DISPLAY(BRIGHT_RED << "Start of the fight against " << RED << _enemy.GetName() << BRIGHT_RED << "!");
 	_enemy.Reset();
-	string _actions[] = { "Attaquer", "Changer d'arme", "Utiliser soin" };
+	string _actions[] = { "Attack", "Switch weapon", "Heal" };
 	do {
-		DISPLAY(WHITE << ">>> Vie de l'enemi: " << _enemy.GetHealth());
-		DISPLAY(">>> Votre vie: " << _game.GetPlayer()->GetHealth());
+		DISPLAY(WHITE << ">>> Enemy's health: " << _enemy.GetHealth());
+		DISPLAY(">>> Your health: " << _game.GetPlayer()->GetHealth());
 		DISPLAY(BRIGHT_BLACK << "========");
-		DisplayList("Selectionnez l'action a effectuer :", _actions, 3, true);
+		DisplayList("Select the action to do:", _actions, 3, true);
 		_actionLoop = true;
 		do {
-			switch (IntInput("Entrez le numero de l'action :", 0, 2)) {
+			switch (IntInput("Enter the number of the action:", 0, 2)) {
 			case 0:
 				_actionLoop = false;
 				srand(time(NULL));
 				if ((rand() % 100) < _game.GetPlayer()->GetHeldWeapon().GetPrecision()) {
 					_enemy.ApplyDamages(_game.GetPlayer()->GetHeldWeapon().GetDamages());
-					DISPLAY(BRIGHT_GREEN << "Vous avez attaque l'enemi : " << BRIGHT_RED << _game.GetPlayer()->GetHeldWeapon().GetDamages());
-				} else DISPLAY(BRIGHT_RED << "Vous avez rate l'enemi !");
+					DISPLAY(BRIGHT_GREEN << "You attacked the enemy: " << BRIGHT_RED << _game.GetPlayer()->GetHeldWeapon().GetDamages());
+				}
+				else DISPLAY(BRIGHT_RED << "You missed the enemy!");
 				break;
 			case 1:
 				_game.GetPlayer()->Inventory();
@@ -92,24 +94,25 @@ bool CombatLoop(Game& _game, int _enemyId) {
 				if (_game.GetPlayer()->UseHealItem()) _actionLoop = false;
 				break;
 			default:
-				DISPLAY(RED << "Choix invalide !");
+				DISPLAY(RED << "Invalid choice!");
 				break;
 			}
 		} while (_actionLoop);
 		if (_enemy.IsDead()) _won = true;
 		if (!_won) {
 			_game.GetPlayer()->ApplyDamages(_enemy.GetDamages());
-			DISPLAY(YELLOW << "L'enemi vous as attaque, vous perdez " << RED << _enemy.GetDamages() << YELLOW << " points de vie !");
+			DISPLAY(YELLOW << "The enemy attacked you, you lost " << RED << _enemy.GetDamages() << YELLOW << " HP!");
 		}
 		if (_won || _game.GetPlayer()->IsDead()) _shouldLoop = false;
 		system("PAUSE");
 		system("cls");
 	} while (_shouldLoop);
 	if (_won) {
-		DISPLAY(BRIGHT_GREEN << "Tu as gagne le combat !");
+		DISPLAY(BRIGHT_GREEN << "You won the fight!");
 		_game.GetPlayer()->FightWon();
-	} else {
-		DISPLAY(RED << "Tu as perdu le combat !");
+	}
+	else {
+		DISPLAY(RED << "You lost the fight!");
 		_game.GetPlayer()->FightLost();
 	}
 	return _won;
@@ -121,28 +124,30 @@ void Shop(Game& _game) {
 	do {
 		system("cls");
 		DISPLAY(BRIGHT_BLACK << "========SHOP========" << WHITE);
-		DISPLAY(">>> Vous avez " << _game.GetPlayer()->GetMoney() << " pieces !");
+		DISPLAY(">>> You have " << _game.GetPlayer()->GetMoney() << " coins!");
 		DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-		DISPLAY("Disponible :");
-		DISPLAY("-2 => Pour quitter le shop");
-		DISPLAY("-1 => Pour acheter potion de soin");
+		DISPLAY("Available :");
+		DISPLAY("-2 => Quit the shop");
+		DISPLAY("-1 => Buy a healing potion");
 		_game.DisplayWeapons();
 		DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-		_idChoose = IntInput("Entrez l'id de ce que vous souhaitez faire :", -2, _game.GetWeaponsAmount() - 1);
+		_idChoose = IntInput("Enter the ID of the action you would like to do:", -2, _game.GetWeaponsAmount() - 1);
 		if (_idChoose == -2) {
 			_wantContinue = false;
 			system("cls");
-		} else if (_idChoose == -1) {
+		}
+		else if (_idChoose == -1) {
 			if (_game.GetPlayer()->GetMoney() < 10) {
-				DISPLAY(BRIGHT_RED << "Tu est trop pauvre !");
+				DISPLAY(BRIGHT_RED << "You're poor!");
 				system("PAUSE");
 				continue;
 			}
 			_game.GetPlayer()->AddHealItem(1);
 			_game.GetPlayer()->RemoveMoney(10);
-		} else {
+		}
+		else {
 			if (_game.GetPlayer()->GetMoney() < _game.GetWeapons()[_idChoose].GetPrice()) {
-				DISPLAY(BRIGHT_RED << "Tu est trop pauvre !");
+				DISPLAY(BRIGHT_RED << "You're poor!");
 				system("PAUSE");
 				continue;
 			}
