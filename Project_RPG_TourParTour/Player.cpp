@@ -9,7 +9,7 @@ Player::Player() {
 	heldWeaponId = 0;
 	ownedWeaponsAmount = 0;
 	ownedWeapons = new Weapon[ownedWeaponsAmount];
-	Weapon _tempWeapon = Weapon("Arme par defaut", 5, 75, 0);
+	Weapon _tempWeapon = Weapon("Default weapon", 5, 75, 0);
 	AddWeapon(_tempWeapon);
 }
 
@@ -21,7 +21,7 @@ Player::Player(const int _maxHealth) {
 	heldWeaponId = 0;
 	ownedWeaponsAmount = 0;
 	ownedWeapons = new Weapon[ownedWeaponsAmount];
-	Weapon _tempWeapon = Weapon("Arme par defaut", 5, 75, 0);
+	Weapon _tempWeapon = Weapon("Default weapon", 5, 75, 0);
 	AddWeapon(_tempWeapon);
 }
 
@@ -53,18 +53,18 @@ bool Player::UseHealItem() {
 		health = maxHealth;
 		return true;
 	}
-	else DISPLAY(BRIGHT_RED << "Vous n'avez pas d'item de soin !");
+	else DISPLAY(BRIGHT_RED << "You don't have any healing item!");
 	return false;
 }
 
 void Player::Inventory() {
-	DISPLAY(BRIGHT_BLACK << "========INVENTAIRE========" << WHITE << endl << "Vos armes :");
+	DISPLAY(BRIGHT_BLACK << "========INVENTORY========" << WHITE << endl << "Your weapons:");
 	for (int _i = 0; _i < ownedWeaponsAmount; _i++) {
 		cout << _i << " => ";
 		ownedWeapons[_i].Display(false);
 	}
 	DISPLAY(BRIGHT_BLACK << "========" << WHITE);
-	heldWeaponId = IntInput("Entrez l'id de l'arme que vous souhaitez utiliser :", 0, ownedWeaponsAmount - 1);
+	heldWeaponId = IntInput("Enter the ID of the weapon you would like to use: ", 0, ownedWeaponsAmount - 1);
 }
 
 int Player::IntInput(string _question, int _min, int _max) {

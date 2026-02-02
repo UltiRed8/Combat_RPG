@@ -14,6 +14,6 @@ Weapon::Weapon(const string& _name, const int _damages, const int _precision, co
 }
 
 void Weapon::Display(const bool _withPrice) const {
-	if (_withPrice) DISPLAY(name << " | " << damages << " degats | " << precision << "% de precision | prix: " << price << " pieces");
-	else DISPLAY(name << " | " << damages << " degats | " << precision << "% de precision");
+	if (_withPrice) DISPLAY(name << " | " << damages << " damages | " << precision << "% accuracy | price: " << price << " coins");
+	else DISPLAY(name << " | " << damages << " damages | " << precision << "% accuracy");
 }

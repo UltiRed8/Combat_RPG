@@ -21,7 +21,7 @@ Enemy::Enemy(const string& _name, const int _health, const int _damages, const i
 #pragma endregion
 
 void Enemy::Display() const {
-	DISPLAY(name << " | " << health << " pv | " << damages << " degats | " << reward << " pieces");
+	DISPLAY(name << " | " << health << " HP | " << damages << " Damages | " << reward << " coins");
 }
 
 void Enemy::Reset() {
